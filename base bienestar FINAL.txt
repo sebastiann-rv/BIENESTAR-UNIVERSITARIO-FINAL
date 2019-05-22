@@ -1,0 +1,190 @@
+CREATE TABLE [dbo].[Usuario] (
+    [Identificacion_usua]	INT	NOT NULL,	
+    [Nombre_usuario]       NVARCHAR (50) NULL,
+    [Apellido_usuario]      NVARCHAR (50) NULL,
+    [Fecha_nacimiento] DATE      NULL,
+	[Correo_usuario]	NVARCHAR (50) NULL,
+	[Contraseña_usuario]	NVARCHAR (50) NULL
+    PRIMARY KEY CLUSTERED ([Identificacion_usua] ASC)
+
+	)
+CREATE TABLE [dbo].[Ingreso](
+	[Usuario_ingreso]	NVARCHAR (25) NULL,
+	[Contraseña] NVARCHAR (50) NULL
+    
+	)
+
+
+	CREATE TABLE [dbo].[Categoria](
+	[Identificacion_cate]	INT	NOT NULL,
+	[Nombre_categoria] NVARCHAR (50) NULL
+	PRIMARY KEY CLUSTERED	([Identificacion_cate]	ASC)
+	)
+
+	CREATE TABLE [dbo].[Permanencia_Academica](
+	[Identificacion_Perma]	INT NOT NULL,
+	[Nombre_permanencia]	NVARCHAR (50) NULL
+	PRIMARY KEY CLUSTERED ([Identificacion_Perma] ASC)
+	)
+
+	CREATE TABLE [dbo].[Usuario_Area](
+	[Identificacion_usua]	INT NOT NULL,
+	[ID_Permanencia]	INT NOT NULL
+	CONSTRAINT [FK_dbo.Usuario_Area_dbo.Usuario_ID_Usuario] FOREIGN KEY ([Identificacion_usua]) 
+        REFERENCES [dbo].[Usuario] ([Identificacion_usua]) ON DELETE CASCADE,
+	CONSTRAINT [FK_dbo.Usuario_Area_dbo.Permanencia_Academica_ID_Permanencia]	FOREIGN KEY (ID_Permanencia)
+		REFERENCES [dbo].[Permanencia_Academica] ([Identificacion_Perma])	ON DELETE CASCADE
+	)
+
+	CREATE TABLE [dbo].[Trabajos](
+	[Identificacion_Perma]	INT NOT NULL,
+	[Sede_Permanencia]	INT NOT NULL,
+	[Trabajos]	NVARCHAR (50) NULL,
+	[Fecha_permanencia]	DATE NULL,
+	[Hora_permanencia]	TIME(7)	NULL,
+	[Nombre_encargado]	NVARCHAR (50) NULL
+	CONSTRAINT	[FK_dbo.Trabajos_dbo.Permanencia_Academica_ID_Permanencia]	FOREIGN KEY (Identificacion_Perma)
+		REFERENCES [dbo].[Permanencia_Academica]	([Identificacion_Perma])	ON DELETE CASCADE
+	)
+
+	CREATE TABLE [dbo].[Areas](
+	[Identificacion_cate]	INT NOT NULL,
+	[Sede]	INT	NOT NULL,
+	[Area]	NVARCHAR(50) NULL,
+	[Fecha]	DATE NULL,
+	[Hora]	TIME(7) NULL,
+	[Valor]	INT NULL
+	CONSTRAINT [FK_Areas_dbo.Categoria_ID_categoria]	FOREIGN KEY (Identificacion_cate)
+		REFERENCES [dbo].[Categoria]	(Identificacion_cate)	ON DELETE CASCADE
+	)
+
+
+
+
+
+
+  create procedure [dbo].[sp_consulta_general_areas]
+as
+  select * from Areas
+
+  create procedure [dbo].[sp_consulta_general_trabajos]
+as
+  select * from Trabajos
+
+  create procedure [dbo].[sp_consulta_general_usuario]
+as
+  select * from Usuario
+
+
+
+create procedure sp_guardar_trabajos
+@pcod_permanencia nvarchar(12),
+@pnum_sede_permanencia int,
+@pnom_trabajos nvarchar(25),
+@pfecha smalldatetime,
+@phora smalldatetime,
+@pnom_encargado int
+as
+  if exists (select Identificacion_Perma from Trabajos where Identificacion_Perma=@pcod_permanencia)
+     update Trabajos set Sede_Permanencia=@pnum_sede_permanencia, Trabajos=@pnom_trabajos,
+     Fecha_permanencia=@pfecha,Hora_permanencia=@phora,
+     Nombre_encargado=@pnom_encargado
+     where Identificacion_Perma=@pcod_permanencia
+  else
+      insert into Trabajos(Identificacion_Perma,Trabajos,Sede_Permanencia,
+	  Fecha_permanencia,Hora_permanencia,Nombre_encargado)
+	  values (@pcod_permanencia,@pnum_sede_permanencia,@pnom_trabajos,@pfecha,
+	  @phora,@pnom_encargado)
+
+Create procedure sp_consulta_individual_usuario
+@pid_usuario nvarchar(12)
+as
+  select * from Usuario where Identificacion_usua=@pid_usuario
+
+create procedure sp_guardar_usuario
+@pid_usuario nvarchar(12),
+@pnom_usuario nvarchar(50),
+@papellido_usuario nvarchar (20),
+@pfecha_nacimiento nvarchar (20),
+@pcorreo_usuario nvarchar (50),
+@pcontraseña_usuario nvarchar (50)
+as
+   if exists (select Identificacion_usua from Usuario where Identificacion_usua=@pid_usuario)
+      update Usuario set Nombre_usuario=@pnom_usuario,
+	  Apellido_usuario=@papellido_usuario, Fecha_nacimiento=@pfecha_nacimiento,
+	  Correo_usuario=@pcorreo_usuario, Contraseña_usuario=@pcontraseña_usuario
+   else
+       insert into Usuario (Identificacion_usua,Nombre_usuario,Apellido_usuario,Fecha_nacimiento,
+	   Correo_usuario, Contraseña_usuario)
+	   values (@pid_usuario,@pnom_usuario,@papellido_usuario,@pfecha_nacimiento,
+	   @pcorreo_usuario,@pcontraseña_usuario)
+
+create procedure [dbo].[sp_consultar_ingreso]
+
+@pusuario nvarchar(25),
+
+@pclave nvarchar(25)
+
+as
+    
+select * from Ingreso
+where Usuario_ingreso=@pusuario
+and Contraseña=@pclave
+
+GO
+
+CREATE PROCEDURE [dbo].[sp_eliminar_usuario]
+
+
+@pid_usuario  NVARCHAR(25)
+
+
+
+AS
+
+ BEGIN
+
+
+DELETE FROM Usuario
+
+WHERE Identificacion_usua=@pid_usuario 
+END
+GO
+
+CREATE PROCEDURE [dbo].[sp_eliminar_area]
+
+
+@pid_area  NVARCHAR(25)
+
+
+
+AS
+
+ BEGIN
+DELETE FROM Areas
+
+WHERE Identificacion_cate=@pid_area
+
+END
+
+GO
+
+CREATE PROCEDURE [dbo].[sp_eliminar_trabajo]
+
+
+@pid_trabajo  NVARCHAR(25)
+
+
+
+AS
+
+ BEGIN
+
+
+DELETE FROM Trabajos
+
+WHERE Identificacion_Perma=@pid_trabajo
+
+
+END
+GO
